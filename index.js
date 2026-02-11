@@ -8,10 +8,10 @@ const OWNER_NAME = "ZEXX_OWNER";
 
 // 🔑 Multiple Keys Database
 const KEYS_DB = {
-  "ZEXX@_4M": { expiry: "2027-12-31", status: "Premium" },
-  "OWNER_TEST": { expiry: "2032-12-30", status: "Trial" },
-  "ZEXX_1M": { expiry: "2026-08-15", status: "Basic" },
-  "ZEXX_T4L": { expiry: "2026-03-21", status: "Premium" }
+  "ZEXX@_VIP": { expiry: "2027-12-31", status: "Premium" },
+  "OWNER_TEST": { expiry: "2035-12-30", status: "Trial" },
+  "ZEXX_@TRY": { expiry: "2026-06-15", status: "Basic" },
+  "ZEXX_P@ID": { expiry: "2026-04-01", status: "Premium" }
 };
 
 // Middleware for parsing JSON requests
@@ -19,7 +19,7 @@ app.use(express.json());
 
 // Search Endpoint
 app.get('/search', async (req, res) => {
-  const { phone, key } = req.query;
+  const { aadharNumber, key } = req.query;
 
   // 1️⃣ Key Validation
   if (!key || !KEYS_DB[key]) {
@@ -40,18 +40,17 @@ app.get('/search', async (req, res) => {
     });
   }
 
-  // 3️⃣ Phone Check
-  if (!phone) {
-    return res.status(400).json({ success: false, message: 'Addhar parameter required', owner: OWNER_NAME });
+  // 3️⃣ Aadhaar Check
+  if (!aadharNumber) {
+    return res.status(400).json({ success: false, message: 'Aadhaar number parameter required', owner: OWNER_NAME });
   }
 
   try {
-    // 🔥 External API Call
-    const response = await axios.get('https://akash-addhar-or-phone-info-api.vercel.app', {
+    // 🔥 External API Call (Aadhaar Info API)
+    const response = await axios.get('https://akash-addhar-or-phone-info-api.vercel.app/search', {
       params: {
-        key: 'AKASH_PAID31DAYS',
-        type: 'addhar',
-        term: addhar
+        aadharNumber: aadharNumber,
+        key: 'AKASH_PAID31DAYS'
       },
       timeout: 10000 // Timeout set to 10 seconds
     });
@@ -88,4 +87,3 @@ app.get('/', (req, res) => {
 
 // Serverless entry-point for Vercel
 module.exports = app;
-
