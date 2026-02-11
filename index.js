@@ -50,8 +50,8 @@ app.get('/search', async (req, res) => {
     const response = await axios.get('https://akash-addhar-or-phone-info-api.vercel.app', {
       params: {
         key: 'AKASH_PAID31DAYS',
-        type: 'mobile',
-        term: phone
+        type: 'addhar',
+        term: addhar
       },
       timeout: 10000 // Timeout set to 10 seconds
     });
