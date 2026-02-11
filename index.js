@@ -42,7 +42,7 @@ app.get('/search', async (req, res) => {
 
   // 3️⃣ Phone Check
   if (!phone) {
-    return res.status(400).json({ success: false, message: 'Phone parameter required', owner: OWNER_NAME });
+    return res.status(400).json({ success: false, message: 'Addhar parameter required', owner: OWNER_NAME });
   }
 
   try {
