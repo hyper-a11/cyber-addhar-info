@@ -14,22 +14,25 @@ const KEYS_DB = {
   "ZEXX_P@ID": { expiry: "2026-04-01", status: "Premium" }
 };
 
-// Middleware for parsing JSON requests
 app.use(express.json());
 
-// Search Endpoint
+// 🔎 Aadhaar Search Endpoint
 app.get('/search', async (req, res) => {
   const { aadharNumber, key } = req.query;
 
   // 1️⃣ Key Validation
   if (!key || !KEYS_DB[key]) {
-    return res.status(401).json({ success: false, message: 'Invalid Key!', owner: OWNER_NAME });
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid Key!',
+      owner: OWNER_NAME
+    });
   }
 
   // 2️⃣ Expiry Check
   const today = DateTime.local();
   const expiryDate = DateTime.fromISO(KEYS_DB[key].expiry);
-  const daysLeft = expiryDate.diff(today, 'days').toObject().days;
+  const daysLeft = Math.ceil(expiryDate.diff(today, 'days').days || 0);
 
   if (today > expiryDate) {
     return res.status(403).json({
@@ -40,33 +43,43 @@ app.get('/search', async (req, res) => {
     });
   }
 
-  // 3️⃣ Aadhaar Check
-  if (!aadharNumber) {
-    return res.status(400).json({ success: false, message: 'Aadhaar number parameter required', owner: OWNER_NAME });
+  // 3️⃣ Aadhaar Validation (basic 12-digit check)
+  if (!aadharNumber || !/^\d{12}$/.test(aadharNumber)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Valid 12-digit Aadhaar number required',
+      owner: OWNER_NAME
+    });
   }
 
   try {
-    // 🔥 External API Call (Aadhaar Info API)
-    const response = await axios.get('https://akash-addhar-or-phone-info-api.vercel.app/search', {
-      params: {
-        aadharNumber: aadharNumber,
-        key: 'AKASH_PAID31DAYS'
-      },
-      timeout: 10000 // Timeout set to 10 seconds
-    });
+    // 🔥 External API Call (Updated format)
+    const response = await axios.get(
+      'https://akash-addhar-or-phone-info-api.vercel.app/search',
+      {
+        params: {
+          aadharNumber: aadharNumber,
+          key: 'AKASH_PAID31DAYS'
+        },
+        timeout: 10000
+      }
+    );
 
-    const apiData = response.data;
+    const apiData = response.data || {};
 
-    // 🔥 Owner Replace Fix
-    if (apiData.data && apiData.data.owner) {
+    // 🔁 Replace owner field if exists inside data
+    if (apiData?.data?.owner) {
       apiData.data.owner = 'CYBER×CHAT';
     }
 
     return res.json({
       success: true,
       owner: OWNER_NAME,
+      plan: KEYS_DB[key].status,
+      days_left: daysLeft,
       data: apiData.data || apiData
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -77,13 +90,14 @@ app.get('/search', async (req, res) => {
   }
 });
 
-// Home Route
+// 🏠 Home Route
 app.get('/', (req, res) => {
   res.json({
+    success: true,
     message: 'API Running Successfully 🚀',
     owner: OWNER_NAME
   });
 });
 
-// Serverless entry-point for Vercel
+// 🚀 Serverless entry-point (Vercel)
 module.exports = app;
